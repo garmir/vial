@@ -3,8 +3,9 @@
 nix flake for [vial](https://get.vial.today), the keyboard configurator.
 
 the gui is built from source out of [garmir/vial-gui](https://github.com/garmir/vial-gui),
-branch `encoder-matrix-tester`, which makes encoder rotation show on the
-matrix tester. that change is proposed upstream in
+branch `garmir`, which merges two changes: encoder rotation shows on the
+matrix tester, and the keyboard drawing shrinks to fit small windows.
+the encoder change is proposed upstream in
 [vial-kb/vial-gui#400](https://github.com/vial-kb/vial-gui/pull/400) with the
 firmware side in
 [vial-kb/vial-qmk#1042](https://github.com/vial-kb/vial-qmk/pull/1042).

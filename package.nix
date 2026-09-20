@@ -9,9 +9,10 @@
 }:
 
 let
-  # the gui is built from a fork that adds encoder rotation to the matrix
-  # tester, see https://github.com/vial-kb/vial-gui/pull/400
-  rev = "231c22f7e596a212bc89e1d0eed202c8f87e8f0d";
+  # the gui is built from the garmir branch of the fork, which merges
+  # encoder rotation on the matrix tester (vial-kb/vial-gui#400) and a
+  # keyboard drawing that shrinks to fit the window.
+  rev = "6fe7b9882bd2971747643c7bd53e90cc0d6584be";
 
   python = python3.withPackages (
     ps: with ps; [
@@ -31,7 +32,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "garmir";
     repo = "vial-gui";
     inherit rev;
-    hash = "sha256-PqydB56pmZYsj63++Tzca4boVLzfRrtE0Lg/TYkj+C4=";
+    hash = "sha256-yrSyg9XA2y8FF1g4w4ltFD4y9STScULiEbOlc26XVO4=";
   };
 
   nativeBuildInputs = [

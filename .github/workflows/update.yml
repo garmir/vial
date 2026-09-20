@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # the package tracks the head of the fork branch, not a release
-          latest=$(gh api repos/garmir/vial-gui/commits/encoder-matrix-tester --jq .sha)
+          latest=$(gh api repos/garmir/vial-gui/commits/garmir --jq .sha)
           current=$(nix eval --raw .#vial.src.rev)
           open=$(gh pr list --state open --head "update-${latest:0:12}" --json number --jq length)
           if [ "$latest" != "$current" ] && [ "$open" = 0 ]; then
