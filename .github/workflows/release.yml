@@ -1,0 +1,24 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: test "v$(nix eval --raw .#vial.version)" = "$GITHUB_REF_NAME"
+      - run: nix build .#vial
+      - run: nix-store -qR result | xargs nix-store --export | zstd -T0 -o "vial-$GITHUB_REF_NAME-x86_64-linux.closure.zst"
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes "vial-$GITHUB_REF_NAME-x86_64-linux.closure.zst"

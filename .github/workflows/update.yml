@@ -1,0 +1,57 @@
+name: update
+
+on:
+  schedule:
+    - cron: "29 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # upstream tags are v0.7.5, the package version has no v
+          latest=$(gh api repos/the-vial/releases/releases/latest --jq .tag_name | sed 's/^v//')
+          current=$(nix eval --raw .#vial.version)
+          open=$(gh pr list --state open --head "update-$latest" --json number --jq length)
+          if [ "$latest" != "$current" ] && [ "$open" = 0 ]; then
+            echo "next=$latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+      - if: steps.version.outputs.next != ''
+        env:
+          NEXT: ${{ steps.version.outputs.next }}
+          CURRENT: ${{ steps.version.outputs.current }}
+        run: |
+          sed -i "s/version = \"$CURRENT\"/version = \"$NEXT\"/" package.nix
+          out=$(nix build .#vial --no-link 2>&1) || true
+          specified=$(printf '%s\n' "$out" | grep -oE 'specified: +sha256-[A-Za-z0-9+/=]+' | head -1 | awk '{print $2}')
+          got=$(printf '%s\n' "$out" | grep -oE 'got: +sha256-[A-Za-z0-9+/=]+' | head -1 | awk '{print $2}')
+          if [ -z "$specified" ] || [ -z "$got" ]; then
+            printf '%s\n' "$out"
+            exit 1
+          fi
+          sed -i "s|$specified|$got|" package.nix
+          nix build .#vial --no-link
+      - if: steps.version.outputs.next != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT: ${{ steps.version.outputs.next }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "update-$NEXT"
+          git commit -am "update vial to $NEXT"
+          git push -u origin "update-$NEXT"
+          gh pr create --fill
