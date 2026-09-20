@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # upstream tags are v0.7.5, the package version has no v
-          latest=$(gh api repos/the-vial/releases/releases/latest --jq .tag_name | sed 's/^v//')
+          latest=$(gh api repos/vial-kb/vial-gui/releases/latest --jq .tag_name | sed 's/^v//')
           current=$(nix eval --raw .#vial.version)
           open=$(gh pr list --state open --head "update-$latest" --json number --jq length)
           if [ "$latest" != "$current" ] && [ "$open" = 0 ]; then
