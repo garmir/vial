@@ -21,10 +21,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # upstream tags are v0.7.5, the package version has no v
-          latest=$(gh api repos/vial-kb/vial-gui/releases/latest --jq .tag_name | sed 's/^v//')
-          current=$(nix eval --raw .#vial.version)
-          open=$(gh pr list --state open --head "update-$latest" --json number --jq length)
+          # the package tracks the head of the fork branch, not a release
+          latest=$(gh api repos/garmir/vial-gui/commits/encoder-matrix-tester --jq .sha)
+          current=$(nix eval --raw .#vial.src.rev)
+          open=$(gh pr list --state open --head "update-${latest:0:12}" --json number --jq length)
           if [ "$latest" != "$current" ] && [ "$open" = 0 ]; then
             echo "next=$latest" >> "$GITHUB_OUTPUT"
           fi
@@ -34,7 +34,7 @@ jobs:
           NEXT: ${{ steps.version.outputs.next }}
           CURRENT: ${{ steps.version.outputs.current }}
         run: |
-          sed -i "s/version = \"$CURRENT\"/version = \"$NEXT\"/" package.nix
+          sed -i "s/rev = \"$CURRENT\"/rev = \"$NEXT\"/" package.nix
           out=$(nix build .#vial --no-link 2>&1) || true
           specified=$(printf '%s\n' "$out" | grep -oE 'specified: +sha256-[A-Za-z0-9+/=]+' | head -1 | awk '{print $2}')
           got=$(printf '%s\n' "$out" | grep -oE 'got: +sha256-[A-Za-z0-9+/=]+' | head -1 | awk '{print $2}')
@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "update-$NEXT"
-          git commit -am "update vial to $NEXT"
-          git push -u origin "update-$NEXT"
+          git switch -c "update-${NEXT:0:12}"
+          git commit -am "update vial-gui to ${NEXT:0:12}"
+          git push -u origin "update-${NEXT:0:12}"
           gh pr create --fill

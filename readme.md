@@ -2,8 +2,13 @@
 
 nix flake for [vial](https://get.vial.today), the keyboard configurator.
 
-upstream ships the gui as an appimage. this flake wraps it for nix and
-ships the udev rule the app needs to talk to the keyboard.
+the gui is built from source out of [garmir/vial-gui](https://github.com/garmir/vial-gui),
+branch `encoder-matrix-tester`, which makes encoder rotation show on the
+matrix tester. that change is proposed upstream in
+[vial-kb/vial-gui#400](https://github.com/vial-kb/vial-gui/pull/400) with the
+firmware side in
+[vial-kb/vial-qmk#1042](https://github.com/vial-kb/vial-qmk/pull/1042).
+the flake also ships the udev rule the app needs to talk to the keyboard.
 
 ## use
 
@@ -28,5 +33,11 @@ it the app cannot see the keyboard.
 ## run without installing
 
     nix run github:garmir/vial
+
+## how it is built
+
+upstream runs vial under the fbs runtime, which nix does not package.
+`fbs-runtime/` is a small stand in that only provides what vial uses:
+build settings, resource paths and the qt application.
 
 x86_64-linux only.
